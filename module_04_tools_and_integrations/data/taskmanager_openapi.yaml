@@ -1,0 +1,115 @@
+openapi: 3.1.0
+info:
+  title: Task Management API
+  description: API для управления задачами и проектами
+  version: 1.0.0
+
+servers:
+  - url: https://api.taskmanager.com/v1
+    description: Production server
+
+paths:
+  /tasks:
+    get:
+      summary: Получить список задач
+      description: Возвращает список задач с опциональной фильтрацией
+      parameters:
+        - name: status
+          in: query
+          description: Фильтр по статусу (open, in_progress, done)
+          schema:
+            type: string
+            enum: [open, in_progress, done]
+        - name: assignee
+          in: query
+          description: ID исполнителя для фильтрации
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Максимальное количество результатов
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+
+    post:
+      summary: Создать новую задачу
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Задача создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  /tasks/{taskId}:
+    get:
+      summary: Получить задачу по ID
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Задача найдена
+        '404':
+          description: Задача не найдена
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, in_progress, done]
+        assignee_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    TaskCreate:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        assignee_id:
+          type: integer
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+security:
+  - bearerAuth: []
